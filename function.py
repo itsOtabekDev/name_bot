@@ -1,9 +1,6 @@
 import json
 with open('ismlar_baza.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
-for i in data:
-    name = i['properties']['name']
-    print(name)
 name_meaning_dict = {item['properties']['name'].lower(): item['properties']['meaning'] for item in data}
 
 def handle_text(update, context):
