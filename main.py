@@ -3,7 +3,9 @@ from function import handle_text
 import os
 import urllib.parse
 import pymysql
+
 TOKEN = os.getenv("TOKEN")
+
 
 def get_db_connection():
     try:
@@ -18,7 +20,6 @@ def get_db_connection():
         port = parsed_url.port or 3306
         database = parsed_url.path[1:]
 
-        # Создаем подключение к MySQL
         conn = pymysql.connect(
             host=host,
             port=port,
@@ -27,22 +28,21 @@ def get_db_connection():
             password=password
         )
 
-        # Создаем таблицу users, если она не существует
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                phone_number VARCHAR(20) PRIMARY KEY,
+                user_name VARCHAR(255),
+                user_id VARCHAR(20) PRIMARY KEY,
                 first_name VARCHAR(255),
-                last_name VARCHAR(255),
-                gender VARCHAR(10),
+                last_name VARCHAR(255)
             )
         """)
         conn.commit()
-        cursor.close()
 
         return conn
     except Exception as e:
         raise
+
 
 def start_func(update, context):
     user = update.message.from_user
@@ -52,24 +52,22 @@ def start_func(update, context):
     user_name = user.username
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
-        if not cursor.fetchone():
-            cursor.execute("""
-                    INSERT INTO users (user_name, user_id, first_name, last_name)
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
+            if not cursor.fetchone():
+                cursor.execute("""
+                    INSERT INTO users (user_id, user_name, first_name, last_name)
                     VALUES (%s, %s, %s, %s)
-                """, (user_name, user_id, first_name, last_name))
-            conn.commit()
-            print(f"Добавлен пользователь: {user_id}, {first_name}")
-        else:
-            print(f"Пользователь {user_id} уже существует")
-
-        cursor.close()
-        conn.close()
-
+                """, (user_id, user_name, first_name, last_name))
+                conn.commit()
+                print(f"Добавлен пользователь: {user_id}, {first_name}")
     except Exception as e:
         print(f"Ошибка при записи в базу: {e}")
-    update.message.reply_text(text="Salom bu botga ism yozing bot sizga yozgan ismingizni manosini topib beradi!")
+        update.message.reply_text("Произошла ошибка. Попробуйте позже.")
+        return
+    update.message.reply_text(
+        text="Salom bu botga ism yozing(uzbekchada) bot sizga yozgan ismingizni manosini topib beradi! (15000-ta ism ichidan)")
+
 updater = Updater(token=f"{TOKEN}")
 dispatcher = updater.dispatcher
 dispatcher.add_handler(CommandHandler('start', start_func))
