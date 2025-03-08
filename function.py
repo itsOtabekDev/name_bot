@@ -12,6 +12,6 @@ def handle_text(update, context):
     if user_text_lower.lower() in name_meaning_dict:
         meaning = name_meaning_dict[user_text_lower]
         update.message.reply_text(f"bu '{user_text}' isimni manosi: {meaning}")
-    else: update.message.reply_text(f'{user_text} - bu ism bazada topilmadi!')
+    else: update.message.reply_text(f'{user_text} - bu ism bazada topilmadi ❌')
 
     print(f"user text = : {user_text}")
